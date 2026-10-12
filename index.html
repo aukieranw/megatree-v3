@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Megatree v3 Build</title>
+<meta name="description" content="Step-by-step 3D erection sequence for the Megatree v3 Christmas light display, from the Fusion model.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three/build/three.module.min.js",
+  "three/addons/": "./vendor/three/addons/"
+} }
+</script>
+</head>
+<body>
+<canvas id="scene" aria-label="3D view of the megatree. Drag to orbit, right-drag or two fingers to pan, scroll or pinch to zoom."></canvas>
+
+<header class="masthead">
+  <div class="brand">
+    <span class="eyebrow">Erection sequence</span>
+    <h1>Megatree v3</h1>
+  </div>
+  <div class="toolbar">
+    <label class="field">
+      <span>Show</span>
+      <select id="effect"></select>
+    </label>
+    <label class="field">
+      <span>Sky</span>
+      <select id="sky">
+        <option value="auto">Auto</option>
+        <option value="day">Day</option>
+        <option value="night">Night</option>
+      </select>
+    </label>
+    <button id="siteBtn" class="btn" type="button" aria-expanded="false" aria-controls="sitePanel">Site</button>
+  </div>
+</header>
+
+<aside class="steps" id="stepsPanel">
+  <button id="stepsToggle" class="steps-toggle" type="button" aria-expanded="false" aria-controls="stepList">
+    <span id="stepCounter" class="mono">1 / 16</span><span>All steps</span>
+  </button>
+  <ol id="stepList"></ol>
+</aside>
+
+<section class="card" id="card" aria-live="polite">
+  <div class="card-head">
+    <span class="eyebrow" id="cardEyebrow">Step 1</span>
+    <button id="cardToggle" class="link-btn" type="button" aria-expanded="true" aria-controls="cardText readout">Hide details</button>
+  </div>
+  <h2 id="cardTitle">Loading model…</h2>
+  <p id="cardText">Reading the Fusion export.</p>
+  <dl class="readout" id="readout"></dl>
+</section>
+
+<section class="site" id="sitePanel" hidden>
+  <div class="site-head">
+    <h2>Site</h2>
+    <button id="siteClose" class="btn ghost" type="button" aria-label="Close site panel">Close</button>
+  </div>
+  <p class="hint">Put the satellite view under the tree. The origin is the centre of the NB50 ground stub.</p>
+  <label class="stack" for="latlon">
+    <span>Stub location (lat, lon)</span>
+    <input id="latlon" type="text" inputmode="decimal" placeholder="-33.865143, 151.209900" autocomplete="off">
+  </label>
+  <label class="stack" for="bearing">
+    <span>House direction <output id="bearingOut" class="mono">0°</output></span>
+    <input id="bearing" type="range" min="0" max="359" step="1" value="0">
+  </label>
+  <label class="stack" for="zoom">
+    <span>Detail</span>
+    <select id="zoom">
+      <option value="18">Street (z18)</option>
+      <option value="19">Block (z19)</option>
+      <option value="20" selected>House (z20)</option>
+    </select>
+  </label>
+  <div class="row">
+    <button id="loadSat" class="btn primary" type="button">Load satellite</button>
+    <button id="pickStub" class="btn" type="button" aria-pressed="false">Click stub on map</button>
+    <button id="moveSat" class="btn" type="button" aria-pressed="false">Move imagery</button>
+  </div>
+  <details>
+    <summary>Use my own aerial photo</summary>
+    <label class="stack" for="aerialFile"><span>Image file</span><input id="aerialFile" type="file" accept="image/*"></label>
+    <label class="stack" for="aerialScale"><span>Metres per pixel</span><input id="aerialScale" type="number" min="0.005" step="0.005" value="0.075"></label>
+    <button id="loadAerial" class="btn" type="button">Place photo</button>
+  </details>
+  <div class="row">
+    <button id="copyLink" class="btn ghost" type="button">Copy link with site</button>
+    <button id="copyPlacement" class="btn ghost" type="button">Copy placement</button>
+    <button id="clearSat" class="btn ghost" type="button">Remove imagery</button>
+  </div>
+  <p id="siteStatus" class="status" role="status"></p>
+  <p class="attribution" id="attribution"></p>
+</section>
+
+<footer class="transport" id="transport">
+  <button id="prev" class="icon-btn" type="button" aria-label="Previous step">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
+  </button>
+  <button id="play" class="icon-btn play" type="button" aria-label="Play">
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="i-play"><path d="M7 4v16l13-8z"/></svg>
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="i-pause"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+  </button>
+  <button id="next" class="icon-btn" type="button" aria-label="Next step">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+  </button>
+  <div class="scrub">
+    <div class="ticks" id="ticks" aria-hidden="true"></div>
+    <input id="scrubber" type="range" min="0" max="100" step="0.01" value="0" aria-label="Sequence position">
+  </div>
+  <span id="clock" class="mono clock">0:00</span>
+  <select id="speed" aria-label="Playback speed">
+    <option value="0.5">0.5×</option>
+    <option value="1" selected>1×</option>
+    <option value="2">2×</option>
+  </select>
+  <button id="follow" class="btn ghost follow" type="button" aria-pressed="true" title="Camera follows each step">Follow cam</button>
+</footer>
+
+<div id="tooltip" class="tooltip" hidden></div>
+<div id="loading" class="loading">Loading Fusion model…</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

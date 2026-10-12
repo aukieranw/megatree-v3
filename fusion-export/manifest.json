@@ -1,0 +1,195 @@
+{
+ "note": "One folder per top-level occurrence = one rigid moving group. All OBJs are in WORLD coordinates (mm) at the exported pose in joints.json; animate a folder by applying its joint transform about the joint origin/axis. Hidden/reference bodies were skipped.",
+ "groups": {
+  "Pole": {
+   "folder": "obj/Pole",
+   "occurrence": "Pole:1",
+   "files": [
+    "Section_1.obj",
+    "Section_2.obj",
+    "Section_3.obj",
+    "Coupler_1.obj",
+    "Coupler_2.obj"
+   ]
+  },
+  "Winch Bracket": {
+   "folder": "obj/Winch_Bracket",
+   "occurrence": "Winch Bracket:1",
+   "files": [
+    "Bracket_sleeve.obj",
+    "Bracket_anchor_lug.obj",
+    "Bracket_back_plate.obj",
+    "Bracket_shelf.obj",
+    "Bracket_gusset_+X.obj",
+    "Bracket_gusset_-X.obj",
+    "Winch_Jarrett_F18230___Base_plate_4.5.obj",
+    "Winch_Jarrett_F18230___Side_plate_+X.obj",
+    "Winch_Jarrett_F18230___Side_plate_-X.obj",
+    "Winch_Jarrett_F18230___Drum_+_gear.obj",
+    "Winch_Jarrett_F18230___Crank_shaft_+_pinion.obj",
+    "Winch_Jarrett_F18230___Crank_arm.obj",
+    "Winch_Jarrett_F18230___Handle_grip.obj",
+    "Winch_Jarrett_F18230___Brake_housing.obj",
+    "Winch_Jarrett_F18230___Drum_+_gear_1.obj",
+    "Winch_Jarrett_F18230___Drum_+_gear_2.obj",
+    "Winch_Jarrett_F18230___Drum_+_gear_3.obj",
+    "Winch_Jarrett_F18230___Drum_+_gear_4.obj"
+   ]
+  },
+  "Mid Collar": {
+   "folder": "obj/Mid_Collar",
+   "occurrence": "Mid Collar:1",
+   "files": [
+    "Collar_65x65x4_x150.obj",
+    "Pad_angle_25x25x3_x140.obj",
+    "Mid_guy_tab_FL_6mm.obj",
+    "Mid_guy_tab_FR_6mm.obj",
+    "Mid_guy_tab_rear_6mm_+X_face.obj",
+    "Clamp_nut_M10_welded_-X_face_z40.obj",
+    "Grub_screw_M10x25_cup_point_-X_face_z40.obj",
+    "Jam_nut_M10_-X_face_z40.obj",
+    "Clamp_nut_M10_welded_-X_face_z110.obj",
+    "Grub_screw_M10x25_cup_point_-X_face_z110.obj",
+    "Jam_nut_M10_-X_face_z110.obj",
+    "Clamp_nut_M10_welded_+Y_face_z40.obj",
+    "Grub_screw_M10x25_cup_point_+Y_face_z40.obj",
+    "Jam_nut_M10_+Y_face_z40.obj",
+    "Clamp_nut_M10_welded_+Y_face_z110.obj",
+    "Grub_screw_M10x25_cup_point_+Y_face_z110.obj",
+    "Jam_nut_M10_+Y_face_z110.obj"
+   ]
+  },
+  "NB50 ground stub": {
+   "folder": "obj/NB50_ground_stub",
+   "occurrence": "NB50 ground stub:1",
+   "files": [
+    "NB50_stub_above_ground.obj",
+    "NB50_stub_embedded_945.obj"
+   ]
+  },
+  "Lock sleeve": {
+   "folder": "obj/Lock_sleeve",
+   "occurrence": "Lock sleeve:1",
+   "files": [
+    "Lock_sleeve_spacer_5_x65_x200.obj",
+    "Grub_nut_M10_welded_z240_street_face.obj",
+    "Grub_jam_nut_M10_z240_street_face.obj",
+    "Grub_M10x25_z240_street_face.obj",
+    "Grub_nut_M10_welded_z360_street_face.obj",
+    "Grub_jam_nut_M10_z360_street_face.obj",
+    "Grub_M10x25_z360_street_face.obj",
+    "Grub_nut_M10_welded_z240_house_face.obj",
+    "Grub_jam_nut_M10_z240_house_face.obj",
+    "Grub_M10x25_z240_house_face.obj",
+    "Grub_nut_M10_welded_z360_house_face.obj",
+    "Grub_jam_nut_M10_z360_house_face.obj",
+    "Grub_M10x25_z360_house_face.obj",
+    "Lock_sleeve_NB50_half_75x75x4_x200.obj",
+    "Lock_sleeve_pole_half_65x65x4_x200.obj"
+   ]
+  },
+  "Base - fixed": {
+   "folder": "obj/Base_-_fixed",
+   "occurrence": "Base - fixed:1",
+   "files": [
+    "Base_plate_10_removable_160x275_U_cut-out.obj",
+    "Plate_stud_M12_316_-62_-15.obj",
+    "Levelling_nut_M12_316_-62_-15.obj",
+    "Plate_nut_M12_316_Nyloc_-62_-15.obj",
+    "Plate_stud_M12_316_62_-15.obj",
+    "Levelling_nut_M12_316_62_-15.obj",
+    "Plate_nut_M12_316_Nyloc_62_-15.obj",
+    "Plate_stud_M12_316_-62_220.obj",
+    "Levelling_nut_M12_316_-62_220.obj",
+    "Plate_nut_M12_316_Nyloc_-62_220.obj",
+    "Plate_stud_M12_316_62_220.obj",
+    "Levelling_nut_M12_316_62_220.obj",
+    "Plate_nut_M12_316_Nyloc_62_220.obj",
+    "Leaf-lock_nut_welded_under_plate_-62_50.obj",
+    "Leaf-lock_nut_welded_under_plate_62_50.obj",
+    "Hinge_lug_-X_8x50x50_hole_25_up.obj",
+    "Hinge_lug_+X_8x50x50_hole_25_up.obj",
+    "Hinge_pin_M16_gr4.6.obj",
+    "Nyloc_M16.obj"
+   ]
+  },
+  "Base - hinged leaf": {
+   "folder": "obj/Base_-_hinged_leaf",
+   "occurrence": "Base - hinged leaf:1",
+   "files": [
+    "Hinge_leaf_10_to_the_pin_line_with_lock_wings.obj",
+    "Knuckle_bar_D30_x85_drilled_17_sits_on_the_leaf.obj",
+    "Pole_socket_65x65x4_x150.obj",
+    "Leaf-lock_bolt_M12x35_316_-62_50.obj",
+    "Leaf-lock_washer_-62_50.obj",
+    "Leaf-lock_bolt_M12x35_316_62_50.obj",
+    "Leaf-lock_washer_62_50.obj",
+    "Grub_nut_M10_welded_z90_house_face.obj",
+    "Grub_jam_nut_M10_z90_house_face.obj",
+    "Grub_M10x25_z90_house_face.obj",
+    "Grub_nut_M10_welded_z160_house_face.obj",
+    "Grub_jam_nut_M10_z160_house_face.obj",
+    "Grub_M10x25_z160_house_face.obj"
+   ]
+  },
+  "Topper Assembly": {
+   "folder": "obj/Topper_Assembly",
+   "occurrence": "Topper Assembly:1",
+   "files": [
+    "Topper_Disc__Topper_Disc.obj",
+    "Hub__Spigot.obj",
+    "Hub__Hub_plate.obj",
+    "Carriage__Carriage.obj",
+    "Carriage__608_+X.obj",
+    "Carriage__608_+Y.obj",
+    "Carriage__608_-X.obj",
+    "Carriage__608_-Y.obj",
+    "Carriage__Carriage.obj",
+    "Carriage__608_+X.obj",
+    "Carriage__608_+Y.obj",
+    "Carriage__608_-X.obj",
+    "Carriage__608_-Y.obj",
+    "Lift_Lug__Lug_base_plate.obj",
+    "Lift_Lug__Lug_fin.obj"
+   ]
+  },
+  "Star + mast": {
+   "folder": "obj/Star_+_mast",
+   "occurrence": "Star + mast:1",
+   "files": [
+    "Mast_pole_OD25.obj",
+    "Star_pixels_front_12.4_inset.obj",
+    "Star_coro_46in_10mm.obj",
+    "Star_wiring_rear_45_inset.obj",
+    "Star_socket_plate_6mm.obj",
+    "Star_socket_NB25x3.2_x100.obj",
+    "Set-bolt_nut_M8_welded_20_above_plate.obj",
+    "Set-bolt_nut_M8_welded_80_above_plate.obj"
+   ]
+  },
+  "Pulley Topper": {
+   "folder": "obj/Pulley_Topper",
+   "occurrence": "Pulley Topper:1",
+   "files": [
+    "Sleeve_65x65x4.obj",
+    "Cap_plate.obj",
+    "Cheek_plate_+X.obj",
+    "Cheek_plate_-X.obj",
+    "Sheave_Austlift_070125W_125.obj",
+    "Axle_22_gr8.8.obj",
+    "Keeper_rod_front.obj",
+    "Front_guy_tab_FL.obj",
+    "Front_guy_tab_FR.obj",
+    "Rear_guy_tab_flat_6mm.obj",
+    "Through-bolt_M10x75_8.8.obj",
+    "Nyloc_nut_M10.obj",
+    "Bridge_plate.obj",
+    "Rear_keeper_spacer_tube_16x1.6_x34.obj",
+    "Rear_keeper_bolt_M10x60_8.8.obj",
+    "Rear_keeper_Nyloc_M10.obj",
+    "Sheave_shim_washer_+X_2mm_23_ID_x_36_OD.obj",
+    "Sheave_shim_washer_-X_2mm_23_ID_x_36_OD.obj"
+   ]
+  }
+ }
+}
