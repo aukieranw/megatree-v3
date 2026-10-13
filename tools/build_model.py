@@ -73,6 +73,10 @@ ROLES = [
     (r"^Section_1$", "pole1"),
     (r"^(Section_2|Coupler_1)$", "pole2"),
     (r"^(Section_3|Coupler_2)$", "pole3"),
+    (r"^(Base_plate|Hinge_lug|Leaf-lock_nut_welded)", "basePlate"),
+    (r"^Plate_nut_M12", "plateNut:"),          # trailing ':' → one role per part, so each nut can spin
+    (r"^(Hinge_pin|Nyloc_M16)", "hingePin"),
+    (r"^Leaf-lock_(bolt|washer)", "leafLock"),
 ]
 # Fusion exported nearly everything as satin steel; override where the real finish differs.
 COLOR_OVERRIDES = [
@@ -207,6 +211,8 @@ def main():
             colors = read_mtl(path.with_suffix(".mtl"))
             color = match_rule(COLOR_OVERRIDES, stem, colors.get(material, [0.63, 0.63, 0.63]))
             role = match_rule(ROLES, stem)
+            if role and role.endswith(':'):
+                role += stem
             for inst in instances:
                 m = matmul(occ_m, placements[inst]) if inst else occ_m
                 key = (group, tuple(round(c, 4) for c in color), role)

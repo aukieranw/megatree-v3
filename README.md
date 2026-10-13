@@ -1,7 +1,7 @@
 # Megatree v3 build viewer
 
 A 3D, step-by-step erection sequence for the Megatree v3, built from the Fusion model.
-Orbit, pan and zoom the scene, scrub through the 16 steps, and drop a satellite view of the yard underneath.
+Orbit, pan and zoom the scene, scrub through the steps, and drop a satellite view of the yard underneath.
 
 ## Run it
 
@@ -60,4 +60,4 @@ Joint values there use Fusion's units and signs (hinge °, sliders mm).
 - **Pixels per string.** Defaults to 50. It isn't in the export, so set `LIGHTS.pixelsPerString` to the real count.
 - **String sag and slack.** A rope simulation, pinned at the topper and the base ring.
 - **Winch crank speed and cable route.** Approximate. The cable follows the "Cable @ park" sketch, simplified.
-- **Fit order before the walk-up.** Bracket, then collar, then topper, all slid on from the top. This is inferred from the parts, not from the manual.
+- **Small timings and approach paths.** For example, the pulley head going on right after the sections are joined, and the mid collar sliding on between the topper and the winch bracket. The order itself follows the build notes; these details within it are inferred from the parts.

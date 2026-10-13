@@ -6,20 +6,27 @@ const SHEAVE_AXIS_POINT = new THREE.Vector3(0, 7.64, -0.0915);
 const SHEAVE_RADIUS = 0.0555;
 const EXPORTED_COLLAR = 400;
 
-// Where each fitted group comes from before it is in place: pole frame = along/around the pole
-// as it lies on the sawhorse, world = dropped in from above.
-const FIT = {
-  fitStub: { groups: ['NB50 ground stub'], frame: 'world', from: [0, 1.4, 0] },
-  fitBase: { groups: ['Base - fixed'], frame: 'world', from: [0, 0.6, 0] },
-  fitLeaf: { groups: ['Base - hinged leaf'], frame: 'world', from: [0, 0.5, 0] },
-  fitBracket: { groups: ['Winch Bracket'], frame: 'pole', from: [0, 7.0, 0] },
-  fitCollar: { groups: ['Mid Collar'], frame: 'pole', from: [0, 6.8, 0] },
-  fitTopper: { groups: ['Topper Assembly'], frame: 'pole', from: [0, 6.4, 0] },
-  fitHead: { groups: ['Pulley Topper'], frame: 'pole', from: [0, 0.8, 0] },
-  fitSleeve: { groups: ['Lock sleeve'], frame: 'pole', from: [0.45, 0, 0] },
-  fitStar: { groups: ['Star + mast'], frame: 'world', from: [0, 0.9, 0] },
-};
+// How far the assembled pole sits back from the leaf socket before it's slid in (along its axis).
+const INSERT_OFFSET = 1.2;
+
+// Where each fitted part comes from before it is in place. Pole frame = along the pole as it lies
+// on the sawhorse (negative Y = from the bottom end); world = dropped in from above.
+// Order matters where nodes nest: a child's entry must come after its parent's.
+const FIT = [
+  { key: 'fitBasePlate', node: (m) => m.roles.basePlate, frame: 'world', from: [0, 0.45, 0] },
+  { key: 'fitLeaf', node: (m) => m.groups['Base - hinged leaf'], frame: 'world', from: [0, 0.5, 0] },
+  { key: 'fitPin', node: (m) => m.roles.hingePin, frame: 'world', from: [0.3, 0, 0] },
+  { key: 'fitLeafLock', node: (m) => m.roles.leafLock, frame: 'pole', from: [0, 0.15, 0] },
+  { key: 'fitHead', node: (m) => m.groups['Pulley Topper'], frame: 'pole', from: [0, 0.8, 0] },
+  { key: 'fitTopper', node: (m) => m.groups['Topper Assembly'], frame: 'pole', from: [0, -1.75, 0] },
+  { key: 'fitCollar', node: (m) => m.groups['Mid Collar'], frame: 'pole', from: [0, -1.3, 0] },
+  { key: 'fitBracket', node: (m) => m.groups['Winch Bracket'], frame: 'pole', from: [0, -1.15, 0] },
+  { key: 'fitSleeve', node: (m) => m.groups['Lock sleeve'], frame: 'pole', from: [0, -0.8, 0] },
+  { key: 'fitStar', node: (m) => m.groups['Star + mast'], frame: 'world', from: [0, 0.9, 0] },
+];
 const POLE_SECTIONS = ['pole1', 'pole2', 'pole3'];
+// Roles that get their own node so they can move or fade independently of their group.
+const HELD_ROLES = new Set([...POLE_SECTIONS, 'basePlate', 'hingePin', 'leafLock']);
 
 export async function loadModel(url) {
   const header = await fetch(`${url}.json`).then((r) => r.json());
@@ -46,19 +53,21 @@ class Megatree {
     this.pole = new THREE.Group();          // pole frame == world frame at the exported pose
     this.pole.position.copy(this.hingeOrigin).negate();
     this.hinge.add(this.pole);
+    this.poleBody = new THREE.Group();      // the pole and everything on it; slides into the leaf socket
+    this.pole.add(this.poleBody);
     this.topperSlide = new THREE.Group();
     this.collarSlide = new THREE.Group();
     this.sleeveSlide = new THREE.Group();
-    this.pole.add(this.topperSlide, this.collarSlide, this.sleeveSlide);
+    this.poleBody.add(this.topperSlide, this.collarSlide, this.sleeveSlide);
     this.root.add(this.fixed, this.hinge);
 
     const parentOf = {
       'NB50 ground stub': this.fixed,
       'Base - fixed': this.fixed,
       'Base - hinged leaf': this.pole,
-      Pole: this.pole,
-      'Winch Bracket': this.pole,
-      'Pulley Topper': this.pole,
+      Pole: this.poleBody,
+      'Winch Bracket': this.poleBody,
+      'Pulley Topper': this.poleBody,
       'Topper Assembly': this.topperSlide,
       'Star + mast': this.topperSlide,
       'Mid Collar': this.collarSlide,
@@ -66,7 +75,8 @@ class Megatree {
     };
 
     this.groups = {};
-    this.roleNodes = {};
+    this.roles = {};
+    this.plateNuts = [];
     const groupNode = (name) => {
       if (!this.groups[name]) {
         const g = new THREE.Group();
@@ -105,12 +115,19 @@ class Megatree {
       group.userData.materials.push(mat);
       if (m.role === 'crank') this.crank.inner.add(mesh);
       else if (m.role === 'sheave') this.sheave.inner.add(mesh);
-      else if (POLE_SECTIONS.includes(m.role)) {
-        const holder = new THREE.Group();
+      else if (m.role?.startsWith('plateNut:')) {
+        geo.computeBoundingBox();
+        const nut = pivotAbout(geo.boundingBox.getCenter(new THREE.Vector3()));
+        nut.inner.add(mesh);
+        nut.outer.userData.materials = [mat];
+        nut.home = nut.outer.position.clone();
+        group.add(nut.outer);
+        this.plateNuts.push(nut);
+      } else if (HELD_ROLES.has(m.role)) {
+        const holder = (this.roles[m.role] ??= Object.assign(new THREE.Group(), { userData: { materials: [] } }));
         holder.add(mesh);
-        holder.userData.materials = [mat];
+        holder.userData.materials.push(mat);
         group.add(holder);
-        this.roleNodes[m.role] = holder;
       } else group.add(mesh);
       if (m.role === 'starPixels') this.starPixels = mat;
     }
@@ -119,6 +136,25 @@ class Megatree {
     this.buildCable(header.lines);
     this.buildRigging(header.lines);
     this.buildSawhorse();
+  }
+
+  // Guy ropes: tab positions (pole frame at the exported pose), anchors, and tensioned lengths.
+  // Mid guys ride the collar; top guys ride the pulley head.
+  get guySpecs() {
+    return this.guyLines.map(({ tab, anchor }) => ({
+      tab,
+      anchor,
+      length: tab.distanceTo(anchor),
+      mid: tab.y < 5,
+    }));
+  }
+
+  guyTabsWorld(out) {
+    this.guyLines.forEach(({ tab }, i) => {
+      const parent = tab.y < 5 ? this.collarSlide : this.poleBody;
+      out[i] = parent.localToWorld((out[i] ?? new THREE.Vector3()).copy(tab));
+    });
+    return out;
   }
 
   partAt(hit) {
@@ -149,7 +185,7 @@ class Megatree {
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3 * (this.cableFixed.length + 1)), 3));
     this.cable = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xd8d2c0 }));
     this.cable.frustumCulled = false;
-    this.pole.add(this.cable);
+    this.poleBody.add(this.cable);
   }
 
   buildRigging(lines) {
@@ -163,21 +199,6 @@ class Megatree {
       tab: new THREE.Vector3(...tab),
       anchor: new THREE.Vector3(...anchor),
     }));
-    const guyGeo = new THREE.BufferGeometry();
-    guyGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this.guyLines.length * 6), 3));
-    this.guys = new THREE.LineSegments(guyGeo, new THREE.LineBasicMaterial({ color: 0xe0b44a }));
-    this.guys.frustumCulled = false;
-    this.fixed.add(this.guys);
-
-    const anchorGeo = new THREE.SphereGeometry(0.03, 12, 8);
-    const anchorMat = new THREE.MeshStandardMaterial({ color: 0xe0b44a, roughness: 0.6 });
-    this.anchors = new THREE.Group();
-    for (const g of this.guyLines) {
-      const m = new THREE.Mesh(anchorGeo, anchorMat);
-      m.position.copy(g.anchor);
-      this.anchors.add(m);
-    }
-    this.fixed.add(this.anchors);
   }
 
   // Not in the Fusion model; drawn to show where the pole rests before the walk-up.
@@ -211,15 +232,25 @@ class Megatree {
     this.collarSlide.position.y = (s.collar - EXPORTED_COLLAR) / 1000;
     this.sleeveSlide.position.y = s.sleeve / 1000;
 
-    for (const [key, spec] of Object.entries(FIT)) {
-      const offset = new THREE.Vector3(...spec.from).multiplyScalar(1 - s[key]);
-      const ridesHinge = this.groups[spec.groups[0]].parent !== this.fixed;
-      if (spec.frame === 'world' && ridesHinge) offset.applyQuaternion(invHinge);
-      for (const name of spec.groups) setFit(this.groups[name], s[key], offset);
+    this.poleBody.position.y = (1 - s.insert) * INSERT_OFFSET;
+
+    for (const spec of FIT) {
+      const node = spec.node(this);
+      const offset = new THREE.Vector3(...spec.from).multiplyScalar(1 - s[spec.key]);
+      if (spec.frame === 'world' && !isUnder(node, this.fixed)) {
+        offset.applyQuaternion(invHinge);
+      }
+      setFit(node, s[spec.key], offset);
     }
     POLE_SECTIONS.forEach((role, i) => {
       const f = THREE.MathUtils.clamp(s.fitPole * 3 - i, 0, 1);
-      setFit(this.roleNodes[role], f, new THREE.Vector3(0, 1.2 * (1 - f), 0));
+      setFit(this.roles[role], f, new THREE.Vector3(0, 1.2 * (1 - f), 0));
+    });
+    // Nuts go on one after another, spinning down their studs.
+    this.plateNuts.forEach((nut, i) => {
+      const f = THREE.MathUtils.clamp(s.fitPlateNuts * this.plateNuts.length - i, 0, 1);
+      setFit(nut.outer, f, nut.home.clone().add(new THREE.Vector3(0, 0.1 * (1 - f), 0)));
+      nut.spin.rotation.y = (1 - f) * Math.PI * 8;
     });
 
     const travel = (s.topper + 5070) / 1000;
@@ -227,7 +258,6 @@ class Megatree {
     this.sheave.spin.rotation.x = travel / SHEAVE_RADIUS;
 
     this.updateCable(s);
-    this.updateGuys(s.guys);
     this.sawhorse.visible = s.hinge > 1 && s.fitPole > 0;
     this.baseRing.visible = s.strings > 0;
     this.root.updateMatrixWorld(true);
@@ -247,25 +277,9 @@ class Megatree {
     attr.needsUpdate = true;
   }
 
-  updateGuys(f) {
-    this.guys.visible = this.anchors.visible = f > 0;
-    if (f <= 0) return;
-    const attr = this.guys.geometry.attributes.position;
-    const n = this.guyLines.length;
-    this.guyLines.forEach((g, i) => {
-      // Guys go on one at a time, each run from its anchor up to the tab.
-      const k = THREE.MathUtils.clamp(f * n - i, 0, 1);
-      const end = g.anchor.clone().lerp(g.tab, k);
-      attr.setXYZ(i * 2, g.anchor.x, g.anchor.y, g.anchor.z);
-      attr.setXYZ(i * 2 + 1, end.x, end.y, end.z);
-    });
-    attr.needsUpdate = true;
-  }
-
   // Unlit lines would otherwise glow under night-time bloom.
   setNight(n) {
     const dim = 1 - 0.75 * n;
-    this.guys.material.color.setHex(0xe0b44a).multiplyScalar(dim);
     this.cable.material.color.setHex(0xd8d2c0).multiplyScalar(dim);
   }
 
@@ -289,6 +303,11 @@ function pivotAbout(point) {
   outer.add(spin);
   spin.add(inner);
   return { outer, spin, inner };
+}
+
+function isUnder(node, ancestor) {
+  for (let o = node.parent; o; o = o.parent) if (o === ancestor) return true;
+  return false;
 }
 
 function setFit(node, f, offset) {

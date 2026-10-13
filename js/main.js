@@ -8,6 +8,7 @@ import { STEPS, INITIAL_STATE, LIGHTS, SITE } from './config.js';
 import { Timeline } from './timeline.js';
 import { loadModel } from './model.js';
 import { LightStrings } from './strings.js';
+import { GuyRopes } from './guys.js';
 import { EFFECTS } from './effects.js';
 import { loadTiles, loadImageFile, ATTRIBUTION } from './satellite.js';
 import { idbGet, idbSet, idbDelete } from './store.js';
@@ -112,6 +113,25 @@ const model = await loadModel('model/megatree').catch((err) => {
 scene.add(model.root);
 const strings = new LightStrings(model.header.lines.strings, LIGHTS.pixelsPerString);
 scene.add(strings.object);
+const guySpecs = model.guySpecs;
+const guys = new GuyRopes(guySpecs);
+scene.add(guys.object);
+const guyTabs = [];
+const guyOn = new Array(guySpecs.length).fill(0);
+const guyAnchored = new Array(guySpecs.length).fill(0);
+
+// Guys within each set (top, mid) go on one after another.
+function guyProgress(state) {
+  for (const mid of [false, true]) {
+    const idx = guySpecs.map((g, i) => (g.mid === mid ? i : -1)).filter((i) => i >= 0);
+    const on = mid ? state.guyMidOn : state.guyTopOn;
+    const anchored = mid ? state.guyMidAnchor : state.guyTopAnchor;
+    idx.forEach((i, j) => {
+      guyOn[i] = THREE.MathUtils.clamp(on * idx.length - j, 0, 1);
+      guyAnchored[i] = THREE.MathUtils.clamp(anchored * idx.length - j, 0, 1);
+    });
+  }
+}
 $('loading').hidden = true;
 
 const timeline = new Timeline(STEPS, INITIAL_STATE, { rest: model.restAngle });
@@ -278,9 +298,29 @@ function updateReadout(state) {
 let skyMode = 'auto';
 $('sky').addEventListener('change', (e) => { skyMode = e.target.value; });
 
+// Ground choices. White and black are plain studio backdrops: the sky matches the floor.
+const BACKDROPS = {
+  photo: { ground: 0x4b6b3c },
+  grass: { ground: 0x4b6b3c },
+  white: { ground: 0xecece8, sky: new THREE.Color('#f3f3f0') },
+  black: { ground: 0x101114, sky: new THREE.Color('#0a0b0d') },
+};
+let backdrop = 'photo';
+function setBackdrop(value) {
+  backdrop = BACKDROPS[value] ? value : 'photo';
+  satRoot.visible = backdrop === 'photo';
+  ground.material.color.setHex(BACKDROPS[backdrop].ground);
+  $('backdrop').value = backdrop;
+  try { localStorage.setItem('megatree.backdrop', backdrop); } catch { /* storage unavailable */ }
+}
+$('backdrop').addEventListener('change', (e) => setBackdrop(e.target.value));
+try { setBackdrop(localStorage.getItem('megatree.backdrop') || 'photo'); } catch { setBackdrop('photo'); }
+
 function applySky(nightFromTimeline) {
   const n = skyMode === 'auto' ? nightFromTimeline : (skyMode === 'night' ? 1 : 0);
-  scene.background.copy(DAY_SKY).lerp(NIGHT_SKY, n);
+  const plain = BACKDROPS[backdrop].sky;
+  if (plain) scene.background.copy(plain);
+  else scene.background.copy(DAY_SKY).lerp(NIGHT_SKY, n);
   scene.fog.color.copy(scene.background);
   hemi.intensity = THREE.MathUtils.lerp(1.1, 0.05, n);
   sun.intensity = THREE.MathUtils.lerp(2.4, 0, n);
@@ -675,7 +715,10 @@ function frame(now) {
   }
 
   model.apply(state);
-  strings.update(dt * (playing ? speed : 1), state.topper / 1000, state.strings, needsSettle);
+  const simDt = dt * (playing ? speed : 1);
+  strings.update(simDt, state.topper / 1000, state.strings, needsSettle);
+  guyProgress(state);
+  guys.update(simDt, model.guyTabsWorld(guyTabs), guyOn, guyAnchored, needsSettle);
   needsSettle = false;
 
   showTime += dt;
@@ -686,7 +729,9 @@ function frame(now) {
     model.starPixels.emissive.copy(starColor).multiplyScalar(state.lights * 0.8);
   }
 
-  model.setNight(applySky(state.night));
+  const night = applySky(state.night);
+  model.setNight(night);
+  guys.setNight(night);
   updateReadout(state);
   if (document.activeElement !== scrubber) scrubber.value = time;
   $('clock').textContent = fmt(time);
